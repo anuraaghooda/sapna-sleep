@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sapna Sleep</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
+<style>
+/* ── RESET & TOKENS ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --navy: #1a1f3c;
+  --deep: #0d1026;
+  --blue: #4a7fd4;
+  --soft-blue: #7aa8e8;
+  --moon: #c8d9f5;
+  --accent: #8b5cf6;
+  --gold: #f0c060;
+  --green: #34d399;
+  --white: #f4f6ff;
+  --muted: rgba(200,217,245,0.55);
+  --card: rgba(255,255,255,0.04);
+  --card-border: rgba(200,217,245,0.1);
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--deep);
+  color: var(--white);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 40px;
+  background: rgba(13,16,38,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(74,127,212,0.12);
+  transition: all .3s;
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.25rem; color: var(--moon);
+  text-decoration: none; cursor: pointer;
+}
+.nav-links { display: flex; align-items: center; gap: 8px; }
+.nav-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .875rem; color: var(--muted);
+  padding: 8px 16px; border-radius: 8px;
+  transition: color .2s, background .2s;
+}
+.nav-btn:hover { color: var(--moon); background: rgba(255,255,255,.05); }
+.nav-btn.active { color: var(--soft-blue); background: rgba(74,127,212,.12); }
+.nav-cta {
+  background: linear-gradient(135deg, var(--blue), var(--accent));
+  color: #fff !important; border-radius: 100px;
+  padding: 9px 22px; font-weight: 600;
+}
+.nav-cta:hover { opacity: .9; background: linear-gradient(135deg, var(--blue), var(--accent)) !important; }
+
+/* ── STARS ── */
+.stars {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, #1a2a5e 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 80% 100%, #0d1a40 0%, transparent 60%),
+    var(--deep);
+}
+.stars::before {
+  content:''; position:absolute; inset:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 50%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 15%, rgba(255,255,255,.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 35%, rgba(255,255,255,.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 70%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 20% 80%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 45% 60%, rgba(200,217,245,.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 75% 25%, rgba(200,217,245,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 15% 45%, rgba(255,255,255,.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 75%, rgba(200,217,245,.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 10%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 95% 55%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 5% 65%, rgba(200,217,245,.45) 0%, transparent 100%);
+}
+
+/* ── PAGES ── */
+.page { display: none; position: relative; z-index: 1; }
+.page.active { display: block; }
+
+/* ── LAYOUT ── */
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  text-align: center; padding: 100px 24px 60px;
+  position: relative;
+}
+.moon-icon {
+  width: 90px; height: 90px; margin-bottom: 28px;
+  animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0px) rotate(-5deg); }
+  50% { transform: translateY(-14px) rotate(5deg); }
+}
+.hero h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 1; color: var(--moon);
+  letter-spacing: -0.02em; margin-bottom: 6px;
+}
+.hero h1 span { color: var(--soft-blue); font-style: italic; }
+.tagline {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: var(--muted); max-width: 500px;
+  margin: 18px auto 0; line-height: 1.6; font-weight: 300;
+}
+.founder-badge {
+  margin-top: 32px;
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(74,127,212,.15);
+  border: 1px solid rgba(74,127,212,.3);
+  border-radius: 100px; padding: 8px 20px;
+  font-size: .875rem; color: var(--soft-blue);
+  letter-spacing: .04em;
+}
+.founder-badge .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--soft-blue); animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+.hero-btns { display: flex; gap: 12px; margin-top: 40px; flex-wrap: wrap; justify-content: center; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--blue), var(--accent));
+  color: #fff; font-family: 'DM Sans', sans-serif;
+  font-size: 1rem; font-weight: 600;
+  padding: 14px 36px; border-radius: 100px; border: none; cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+  box-shadow: 0 8px 32px rgba(74,127,212,.3);
+}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(74,127,212,.5); }
+.btn-secondary {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(200,217,245,.2);
+  color: var(--moon); font-family: 'DM Sans', sans-serif;
+  font-size: 1rem; font-weight: 500;
+  padding: 14px 36px; border-radius: 100px; cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,.1); border-color: rgba(74,127,212,.4); }
+.scroll-cue {
+  position: absolute; bottom: 36px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-size: .75rem; color: var(--muted); letter-spacing: .12em; text-transform: uppercase;
+  animation: fadeInUp 2s ease 1s both;
+}
+.scroll-cue .arrow {
+  width: 20px; height: 20px;
+  border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); animation: bounce 1.8s infinite;
+}
+@keyframes bounce { 0%,100%{transform:rotate(45deg) translateY(0)} 50%{transform:rotate(45deg) translateY(6px)} }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── SECTIONS ── */
+section { padding: 80px 0; }
+.section-label {
+  font-size: .75rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--blue); font-weight: 600; margin-bottom: 12px;
+}
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: var(--moon); line-height: 1.15; margin-bottom: 24px;
+}
+.section-body {
+  font-size: 1.0625rem; line-height: 1.75; color: var(--muted); max-width: 640px;
+}
+
+/* ── PROBLEM CARDS ── */
+.problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 40px; }
+.p-card {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 16px; padding: 28px 22px;
+  transition: transform .3s, border-color .3s;
+}
+.p-card:hover { transform: translateY(-5px); border-color: rgba(74,127,212,.4); }
+.p-card .num { font-family: 'DM Serif Display', serif; font-size: 2.5rem; color: var(--blue); line-height: 1; margin-bottom: 10px; }
+.p-card h3 { font-size: 1rem; font-weight: 600; color: var(--moon); margin-bottom: 8px; }
+.p-card p { font-size: .9rem; color: var(--muted); line-height: 1.6; }
+
+/* ── HOW IT WORKS ── */
+.how-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0; margin-top: 48px; position: relative;
+}
+.how-step { text-align: center; padding: 32px 20px; position: relative; }
+.how-step:not(:last-child)::after {
+  content: '→'; position: absolute; right: -8px; top: 50%; transform: translateY(-50%);
+  color: var(--blue); font-size: 1.5rem; opacity: .5;
+}
+.how-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(74,127,212,.3), rgba(139,92,246,.2));
+  border: 1px solid rgba(74,127,212,.4);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 1.5rem;
+}
+.how-step h3 { font-size: .9375rem; font-weight: 600; color: var(--moon); margin-bottom: 8px; }
+.how-step p { font-size: .85rem; color: var(--muted); line-height: 1.55; }
+
+/* ── MARKET ── */
+.market-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 40px; }
+.market-stat {
+  background: linear-gradient(135deg, rgba(74,127,212,.12), rgba(139,92,246,.08));
+  border: 1px solid rgba(74,127,212,.25); border-radius: 20px; padding: 36px 28px; text-align: center;
+}
+.market-stat .big { font-family: 'DM Serif Display', serif; font-size: clamp(2.5rem, 6vw, 4rem); color: var(--soft-blue); line-height: 1; }
+.market-stat .label { font-size: .85rem; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+/* ── COMPETITOR TABLE ── */
+.comp-table { width: 100%; margin-top: 40px; border-collapse: collapse; }
+.comp-table th {
+  text-align: left; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--blue); padding: 10px 16px; border-bottom: 1px solid rgba(74,127,212,.25); font-weight: 600;
+}
+.comp-table td { padding: 14px 16px; font-size: .9rem; color: var(--muted); border-bottom: 1px solid rgba(255,255,255,.05); }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr.sapna-row td { color: var(--moon); font-weight: 500; }
+.comp-table tr.sapna-row td:first-child { color: var(--soft-blue); }
+.comp-highlight { color: var(--gold) !important; }
+
+/* ── ROADMAP ── */
+.roadmap { display: flex; flex-direction: column; gap: 0; margin-top: 40px; position: relative; padding-left: 32px; }
+.roadmap::before {
+  content:''; position:absolute; left:7px; top:10px; bottom:10px;
+  width: 2px; background: linear-gradient(to bottom, var(--blue), var(--accent));
+}
+.rm-item { position: relative; padding: 0 0 36px 24px; }
+.rm-item::before {
+  content:''; position:absolute; left:-25px; top:5px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--blue); border: 2px solid var(--deep);
+  box-shadow: 0 0 0 3px rgba(74,127,212,.3);
+}
+.rm-item h3 { font-size: 1rem; font-weight: 600; color: var(--moon); margin-bottom: 6px; }
+.rm-item ul { list-style: none; }
+.rm-item ul li { font-size: .9rem; color: var(--muted); line-height: 1.7; padding-left: 14px; position: relative; }
+.rm-item ul li::before { content:'·'; position:absolute; left:0; color: var(--blue); }
+
+/* ── FUNDING ── */
+.fund-ring { display: flex; justify-content: center; margin: 48px 0 32px; }
+.donut-wrap { position: relative; width: 200px; height: 200px; }
+.donut-wrap svg { transform: rotate(-90deg); }
+.donut-center {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+}
+.donut-center .ask { font-family: 'DM Serif Display', serif; font-size: 1.6rem; color: var(--moon); }
+.donut-center .lbl { font-size: .75rem; color: var(--muted); }
+.fund-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 24px; }
+.fund-item { display: flex; align-items: center; gap: 8px; font-size: .875rem; color: var(--muted); }
+.fund-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── CTA SECTION ── */
+.cta-section {
+  text-align: center; padding: 100px 24px;
+  background: linear-gradient(180deg, transparent, rgba(26,31,60,.6));
+  border-top: 1px solid rgba(74,127,212,.15);
+}
+.cta-section h2 { font-family: 'DM Serif Display', serif; font-size: clamp(2rem, 5vw, 3.5rem); color: var(--moon); margin-bottom: 16px; }
+.cta-section p { font-size: 1rem; color: var(--muted); margin-bottom: 36px; }
+.cta-email { display: block; margin-top: 20px; font-size: 1rem; font-weight: 500; color: var(--soft-blue); text-decoration: underline; text-underline-offset: 4px; }
+
+/* ── REVEAL ── */
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s, transform .7s; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ────────────────────────────────────────────
+   TRACKER PAGE
+──────────────────────────────────────────── */
+#page-tracker { padding-top: 80px; min-height: 100vh; }
+.tracker-wrap { max-width: 800px; margin: 0 auto; padding: 40px 24px 80px; }
+.tracker-header { margin-bottom: 40px; }
+.tracker-header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(2rem, 5vw, 3rem); color: var(--moon); margin-bottom: 8px;
+}
+.tracker-header p { color: var(--muted); font-size: 1rem; }
+
+/* SLEEP LOG FORM */
+.log-card {
+  background: rgba(26,31,60,.6);
+  border: 1px solid rgba(74,127,212,.2);
+  border-radius: 20px; padding: 32px;
+  margin-bottom: 32px;
+  backdrop-filter: blur(8px);
+}
+.log-card h2 { font-size: 1.1rem; font-weight: 600; color: var(--moon); margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); font-weight: 600; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(200,217,245,.15);
+  border-radius: 10px; padding: 12px 14px;
+  color: var(--white); font-family: 'DM Sans', sans-serif;
+  font-size: .9375rem; outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--blue); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+.form-group select option { background: #1a1f3c; }
+
+/* QUALITY STARS */
+.star-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.star-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.6rem; transition: transform .15s;
+  filter: grayscale(1) opacity(.4);
+}
+.star-btn.active { filter: none; transform: scale(1.1); }
+.star-btn:hover { transform: scale(1.15); filter: none; }
+.quality-label { font-size: .8rem; color: var(--muted); margin-left: 4px; }
+
+/* MOOD / FACTORS PILLS */
+.pill-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(200,217,245,.15);
+  border-radius: 100px; padding: 6px 14px;
+  font-size: .8rem; color: var(--muted); cursor: pointer;
+  transition: all .2s;
+}
+.pill.selected { background: rgba(74,127,212,.2); border-color: var(--blue); color: var(--soft-blue); }
+
+/* SUBMIT ROW */
+.submit-row { display: flex; justify-content: flex-end; margin-top: 24px; gap: 12px; align-items: center; }
+.form-msg { font-size: .85rem; color: var(--green); flex: 1; }
+.form-msg.err { color: #f87171; }
+
+/* INSIGHTS ROW */
+.insights-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.insight-card {
+  background: rgba(26,31,60,.6);
+  border: 1px solid rgba(74,127,212,.15);
+  border-radius: 16px; padding: 20px 18px; text-align: center;
+}
+.insight-card .i-val {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2rem; color: var(--soft-blue); line-height: 1; margin-bottom: 4px;
+}
+.insight-card .i-lbl { font-size: .78rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+
+/* HISTORY TABLE */
+.history-card {
+  background: rgba(26,31,60,.6);
+  border: 1px solid rgba(74,127,212,.15);
+  border-radius: 20px; overflow: hidden;
+}
+.history-card h2 { font-size: 1.1rem; font-weight: 600; color: var(--moon); padding: 24px 28px 0; display: flex; align-items: center; gap: 8px; }
+.history-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+.history-table th {
+  text-align: left; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--blue); padding: 10px 20px; border-bottom: 1px solid rgba(74,127,212,.15); font-weight: 600;
+}
+.history-table td { padding: 14px 20px; font-size: .875rem; color: var(--muted); border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+.history-table tr:last-child td { border-bottom: none; }
+.history-table tr:hover td { background: rgba(255,255,255,.02); }
+.del-btn {
+  background: none; border: none; cursor: pointer;
+  color: rgba(248,113,113,.5); font-size: 1rem;
+  padding: 4px 8px; border-radius: 6px;
+  transition: color .2s, background .2s;
+}
+.del-btn:hover { color: #f87171; background: rgba(248,113,113,.1); }
+.empty-state { text-align: center; padding: 48px 24px; color: var(--muted); font-size: .9rem; }
+.empty-state .e-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+/* SLEEP CHART */
+.chart-area { padding: 24px 20px 20px; }
+.chart-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+.bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+.bar {
+  width: 100%; border-radius: 6px 6px 0 0;
+  background: linear-gradient(to top, var(--blue), var(--accent));
+  opacity: .8; transition: opacity .2s, transform .2s;
+  cursor: pointer; min-height: 4px;
+}
+.bar:hover { opacity: 1; transform: scaleY(1.03); transform-origin: bottom; }
+.bar-date { font-size: .65rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; }
+.bar-val { font-size: .7rem; color: var(--soft-blue); font-weight: 600; }
+.chart-legend { display: flex; gap: 16px; margin-top: 12px; font-size: .75rem; color: var(--muted); }
+.chart-legend span { display: flex; align-items: center; gap: 5px; }
+.chart-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+/* ── WAITLIST PAGE ── */
+#page-waitlist { padding-top: 80px; min-height: 100vh; }
+.waitlist-wrap { max-width: 600px; margin: 0 auto; padding: 60px 24px 80px; text-align: center; }
+.waitlist-wrap h1 { font-family: 'DM Serif Display', serif; font-size: clamp(2.2rem, 5vw, 3.2rem); color: var(--moon); margin-bottom: 12px; }
+.waitlist-wrap p { color: var(--muted); line-height: 1.7; margin-bottom: 40px; }
+.wl-form { text-align: left; }
+.wl-form .form-group { margin-bottom: 16px; }
+.wl-count { margin-top: 32px; }
+.wl-count .num { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--soft-blue); }
+.wl-count p { font-size: .9rem; color: var(--muted); }
+.wl-entries { margin-top: 32px; text-align: left; }
+.wl-entry {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 10px; padding: 12px 16px; margin-bottom: 8px;
+  font-size: .875rem;
+}
+.wl-entry .wl-name { color: var(--moon); font-weight: 500; }
+.wl-entry .wl-meta { color: var(--muted); font-size: .8rem; }
+.wl-badge {
+  background: rgba(52,211,153,.15);
+  border: 1px solid rgba(52,211,153,.3);
+  color: var(--green); font-size: .75rem;
+  padding: 3px 10px; border-radius: 100px;
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative; z-index: 1;
+  border-top: 1px solid rgba(74,127,212,.1);
+  padding: 32px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .8rem; color: var(--muted);
+}
+footer a { color: var(--soft-blue); text-decoration: none; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: rgba(26,31,60,.95); border: 1px solid rgba(74,127,212,.3);
+  border-radius: 100px; padding: 12px 28px;
+  font-size: .875rem; color: var(--moon);
+  backdrop-filter: blur(16px);
+  transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+  opacity: 0; z-index: 999;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* ── MEDIA ── */
+@media (max-width: 640px) {
+  nav { padding: 12px 20px; }
+  .how-step:not(:last-child)::after { display: none; }
+  .market-row { grid-template-columns: 1fr; }
+  .comp-table th:nth-child(2), .comp-table td:nth-child(2) { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: 1; }
+  footer { flex-direction: column; gap: 8px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="stars"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">
+    <svg width="28" height="28" viewBox="0 0 90 90" fill="none">
+      <path d="M55 10C35 10 20 25 20 45C20 65 35 80 55 80C60 80 65 79 70 77C58 75 48 65 48 52C48 38 58 28 72 28C68 17 62 10 55 10Z" fill="#4a7fd4" opacity=".9"/>
+      <circle cx="70" cy="20" r="5" fill="#c8d9f5" opacity=".8"/>
+      <path d="M75 12L76.5 15.5L80 17L76.5 18.5L75 22L73.5 18.5L70 17L73.5 15.5Z" fill="#f0c060"/>
+    </svg>
+    Sapna Sleep
+  </div>
+  <div class="nav-links">
+    <button class="nav-btn active" id="nav-home" onclick="showPage('home')">Home</button>
+    <button class="nav-btn" id="nav-tracker" onclick="showPage('tracker')">Sleep Tracker</button>
+    <button class="nav-btn" id="nav-waitlist" onclick="showPage('waitlist')">Waitlist</button>
+    <button class="nav-btn nav-cta" onclick="showPage('waitlist')">Join Beta</button>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════
+     HOME PAGE
+════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <svg class="moon-icon" viewBox="0 0 90 90" fill="none">
+      <path d="M55 10C35 10 20 25 20 45C20 65 35 80 55 80C60 80 65 79 70 77C58 75 48 65 48 52C48 38 58 28 72 28C68 17 62 10 55 10Z" fill="#4a7fd4" opacity=".9"/>
+      <circle cx="70" cy="20" r="5" fill="#c8d9f5" opacity=".8"/>
+      <path d="M75 12L76.5 15.5L80 17L76.5 18.5L75 22L73.5 18.5L70 17L73.5 15.5Z" fill="#f0c060"/>
+    </svg>
+    <h1>Sapna <span>Sleep</span></h1>
+    <p class="tagline">"Sapna" means dream in Hindi — helping night workers &amp; busy people sleep better and live brighter.</p>
+    <div class="founder-badge"><span class="dot"></span>Founded by Anuraag Hooda · Columbia University</div>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="showPage('tracker')">Track My Sleep</button>
+      <button class="btn-secondary" onclick="showPage('waitlist')">Join the Waitlist</button>
+    </div>
+    <div class="scroll-cue"><div class="arrow"></div>Explore</div>
+  </div>
+
+  <!-- THE PROBLEM -->
+  <section>
+    <div class="wrap">
+      <div class="reveal">
+        <div class="section-label">The Problem</div>
+        <h2 class="section-title">Sleep deprivation is a global crisis</h2>
+        <p class="section-body">35% of adults worldwide struggle with poor sleep — yet existing solutions only track the problem. They don't fix it.</p>
+      </div>
+      <div class="problem-grid">
+        <div class="p-card reveal">
+          <div class="num">35%</div>
+          <h3>Adults Affected</h3>
+          <p>More than 1 in 3 adults worldwide suffer from poor sleep quality.</p>
+        </div>
+        <div class="p-card reveal">
+          <div class="num">$B+</div>
+          <h3>Economic Cost</h3>
+          <p>Poor sleep costs the global economy billions annually in lost productivity.</p>
+        </div>
+        <div class="p-card reveal">
+          <div class="num">0</div>
+          <h3>Real Interventions</h3>
+          <p>Oura, WHOOP, Apple Watch track — but don't provide real-time optimization.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- THE SOLUTION -->
+  <section style="background: rgba(26,31,60,.4);">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="section-label">Our Solution</div>
+        <h2 class="section-title">AI-driven real-time sleep optimization</h2>
+        <p class="section-body">Sapna Sleep doesn't just measure your sleep — it actively improves it using personalized AI interventions tailored to your biometrics.</p>
+      </div>
+      <div class="how-grid">
+        <div class="how-step reveal">
+          <div class="how-icon">⌚</div>
+          <h3>Wearable Data</h3>
+          <p>HRV, SpO2, movement from Oura, WHOOP, or Apple Watch</p>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-icon">🧠</div>
+          <h3>AI Analysis</h3>
+          <p>Real-time pattern recognition and personalized sleep profiling</p>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-icon">💡</div>
+          <h3>Live Interventions</h3>
+          <p>Light exposure, haptic feedback, sound — tailored to your physiology</p>
+        </div>
+        <div class="how-step reveal">
+          <div class="how-icon">🌙</div>
+          <h3>Better Sleep</h3>
+          <p>Measurable improvements to sleep quality, recovery &amp; daytime energy</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARKET -->
+  <section>
+    <div class="wrap">
+      <div class="reveal">
+        <div class="section-label">Market Opportunity</div>
+        <h2 class="section-title">A $100B+ market ready to disrupt</h2>
+      </div>
+      <div class="market-row">
+        <div class="market-stat reveal">
+          <div class="big">$40B+</div>
+          <div class="label">Sleep Tech Market by 2030<br><span style="opacity:.6">10× expected growth</span></div>
+        </div>
+        <div class="market-stat reveal">
+          <div class="big">$61B+</div>
+          <div class="label">Wearable Health Market by 2027<br><span style="opacity:.6">Accelerating demand</span></div>
+        </div>
+      </div>
+      <div class="reveal" style="margin-top:48px">
+        <div class="section-label">Competitive Landscape</div>
+        <table class="comp-table">
+          <thead><tr><th>Company</th><th>Strength</th><th>Weakness</th></tr></thead>
+          <tbody>
+            <tr class="sapna-row"><td>✦ Sapna Sleep</td><td>Real-time AI interventions</td><td class="comp-highlight">The gap we fill</td></tr>
+            <tr><td>Oura</td><td>Sleep tracking, HRV</td><td>No active optimization</td></tr>
+            <tr><td>WHOOP</td><td>Recovery biometrics</td><td>Expensive subscription</td></tr>
+            <tr><td>Apple Watch</td><td>Large user base</td><td>Battery limits tracking</td></tr>
+            <tr><td>Garmin</td><td>Advanced sleep data</td><td>Battery life</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section style="background: rgba(26,31,60,.4);">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="section-label">Roadmap</div>
+        <h2 class="section-title">The path to launch</h2>
+      </div>
+      <div class="roadmap">
+        <div class="rm-item reveal">
+          <h3>Phase 1 — Now</h3>
+          <ul>
+            <li>Waitlist sign-up &amp; onboard first 25–50 beta testers</li>
+            <li>Continue customer interviews with shift workers &amp; students</li>
+          </ul>
+        </div>
+        <div class="rm-item reveal">
+          <h3>Phase 2 — Closed Beta</h3>
+          <ul>
+            <li>Launch closed beta to early testers</li>
+            <li>Implement feedback loop &amp; refine AI suggestions</li>
+            <li>Prepare wearable integration (Rook API or alternative)</li>
+          </ul>
+        </div>
+        <div class="rm-item reveal">
+          <h3>Phase 3 — Public Launch</h3>
+          <ul>
+            <li>Soft launch of Sapna Sleep to the public</li>
+            <li>Pilot partnerships with wellness influencers &amp; night worker communities</li>
+            <li>Early revenue, hardware prototype feasibility testing</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUNDING -->
+  <section>
+    <div class="wrap" style="text-align:center">
+      <div class="reveal">
+        <div class="section-label">Funding Ask</div>
+        <h2 class="section-title">Seeking $250K Pre-Seed</h2>
+        <p class="section-body" style="margin:0 auto">Strategic capital to build, validate, and launch the first AI sleep intervention platform.</p>
+      </div>
+      <div class="fund-ring reveal">
+        <div class="donut-wrap">
+          <svg width="200" height="200" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="70" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="28"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#4a7fd4" stroke-width="28" stroke-dasharray="175.9 263.9" stroke-dashoffset="0"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#8b5cf6" stroke-width="28" stroke-dasharray="131.9 307.9" stroke-dashoffset="-175.9"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#f0c060" stroke-width="28" stroke-dasharray="87.9 351.9" stroke-dashoffset="-307.8"/>
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#c8d9f5" stroke-width="28" stroke-dasharray="44.0 395.8" stroke-dashoffset="-395.7"/>
+          </svg>
+          <div class="donut-center">
+            <span class="ask">$250K</span>
+            <span class="lbl">Pre-Seed</span>
+          </div>
+        </div>
+      </div>
+      <div class="fund-legend reveal">
+        <div class="fund-item"><div class="fund-dot" style="background:#4a7fd4"></div>40% AI Model</div>
+        <div class="fund-item"><div class="fund-dot" style="background:#8b5cf6"></div>30% App Dev</div>
+        <div class="fund-item"><div class="fund-dot" style="background:#f0c060"></div>20% Marketing</div>
+        <div class="fund-item"><div class="fund-dot" style="background:#c8d9f5"></div>10% Legal</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section reveal">
+    <h2>Ready to sleep smarter?</h2>
+    <p>Join the waitlist or reach out to learn about early access and investment opportunities.</p>
+    <button class="btn-primary" onclick="showPage('waitlist')">Get Early Access</button>
+    <a class="cta-email" href="mailto:hello@sapnasleep.com">hello@sapnasleep.com</a>
+  </div>
+
+  <footer>
+    <span>© 2026 Sapna Sleep · Founded by Anuraag Hooda</span>
+    <span><a href="mailto:hello@sapnasleep.com">hello@sapnasleep.com</a></span>
+  </footer>
+</div>
+
+<!-- ════════════════════════════════════════
+     SLEEP TRACKER PAGE
+════════════════════════════════════════ -->
+<div id="page-tracker" class="page">
+  <div class="tracker-wrap">
+    <div class="tracker-header">
+      <h1>🌙 Sleep Tracker</h1>
+      <p>Log your sleep, spot patterns, and get personalized insights — all stored locally on your device.</p>
+    </div>
+
+    <!-- INSIGHT CARDS -->
+    <div class="insights-row" id="insights-row">
+      <div class="insight-card">
+        <div class="i-val" id="ins-avg">—</div>
+        <div class="i-lbl">Avg Hours (7d)</div>
+      </div>
+      <div class="insight-card">
+        <div class="i-val" id="ins-quality">—</div>
+        <div class="i-lbl">Avg Quality (7d)</div>
+      </div>
+      <div class="insight-card">
+        <div class="i-val" id="ins-streak">0</div>
+        <div class="i-lbl">Log Streak</div>
+      </div>
+      <div class="insight-card">
+        <div class="i-val" id="ins-total">0</div>
+        <div class="i-lbl">Total Entries</div>
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="log-card" id="chart-card" style="display:none">
+      <h2>📈 Sleep Duration (Last 14 Days)</h2>
+      <div class="chart-area">
+        <div class="chart-bars" id="chart-bars"></div>
+      </div>
+    </div>
+
+    <!-- LOG FORM -->
+    <div class="log-card">
+      <h2>✦ Log Tonight's Sleep</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <label>Bedtime</label>
+          <input type="time" id="f-bedtime">
+        </div>
+        <div class="form-group">
+          <label>Wake Time</label>
+          <input type="time" id="f-wake">
+        </div>
+        <div class="form-group">
+          <label>Duration (hrs — auto-calc or enter)</label>
+          <input type="number" id="f-dur" step="0.25" min="0" max="24" placeholder="e.g. 7.5">
+        </div>
+        <div class="form-group full">
+          <label>Sleep Quality</label>
+          <div class="star-group" id="star-group">
+            <button class="star-btn" data-v="1" onclick="setStar(1)">⭐</button>
+            <button class="star-btn" data-v="2" onclick="setStar(2)">⭐</button>
+            <button class="star-btn" data-v="3" onclick="setStar(3)">⭐</button>
+            <button class="star-btn" data-v="4" onclick="setStar(4)">⭐</button>
+            <button class="star-btn" data-v="5" onclick="setStar(5)">⭐</button>
+            <span class="quality-label" id="qual-label">Tap to rate</span>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Morning Mood</label>
+          <div class="pill-group" id="mood-group">
+            <div class="pill" onclick="togglePill(this,'mood')">😴 Exhausted</div>
+            <div class="pill" onclick="togglePill(this,'mood')">😪 Tired</div>
+            <div class="pill" onclick="togglePill(this,'mood')">😐 Okay</div>
+            <div class="pill" onclick="togglePill(this,'mood')">😊 Refreshed</div>
+            <div class="pill" onclick="togglePill(this,'mood')">⚡ Energized</div>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Contributing Factors</label>
+          <div class="pill-group" id="factors-group">
+            <div class="pill" onclick="togglePill(this,'factor')">☕ Caffeine</div>
+            <div class="pill" onclick="togglePill(this,'factor')">🍷 Alcohol</div>
+            <div class="pill" onclick="togglePill(this,'factor')">📱 Screen Time</div>
+            <div class="pill" onclick="togglePill(this,'factor')">🏃 Exercise</div>
+            <div class="pill" onclick="togglePill(this,'factor')">😰 Stress</div>
+            <div class="pill" onclick="togglePill(this,'factor')">🌡️ Too Hot</div>
+            <div class="pill" onclick="togglePill(this,'factor')">🌙 Night Shift</div>
+            <div class="pill" onclick="togglePill(this,'factor')">💊 Medication</div>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Notes</label>
+          <textarea id="f-notes" placeholder="Any other observations about your sleep…"></textarea>
+        </div>
+      </div>
+      <div class="submit-row">
+        <span class="form-msg" id="form-msg"></span>
+        <button class="btn-secondary" onclick="clearForm()">Clear</button>
+        <button class="btn-primary" onclick="saveSleep()">Save Entry</button>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-card">
+      <h2>📋 Sleep History</h2>
+      <div id="history-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     WAITLIST PAGE
+════════════════════════════════════════ -->
+<div id="page-waitlist" class="page">
+  <div class="waitlist-wrap">
+    <svg width="70" height="70" viewBox="0 0 90 90" fill="none" style="margin-bottom:20px; animation: float 6s ease-in-out infinite;">
+      <path d="M55 10C35 10 20 25 20 45C20 65 35 80 55 80C60 80 65 79 70 77C58 75 48 65 48 52C48 38 58 28 72 28C68 17 62 10 55 10Z" fill="#4a7fd4" opacity=".9"/>
+      <circle cx="70" cy="20" r="5" fill="#c8d9f5" opacity=".8"/>
+      <path d="M75 12L76.5 15.5L80 17L76.5 18.5L75 22L73.5 18.5L70 17L73.5 15.5Z" fill="#f0c060"/>
+    </svg>
+    <h1>Join the Waitlist</h1>
+    <p>Be among the first 50 beta testers for Sapna Sleep. We're building the future of sleep optimization for night workers and busy people everywhere.</p>
+
+    <div class="wl-form">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="wl-name" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="wl-email" placeholder="hello@example.com">
+      </div>
+      <div class="form-group">
+        <label>I am a…</label>
+        <select id="wl-type">
+          <option value="">Select your profile</option>
+          <option>Night shift worker</option>
+          <option>Gig economy driver</option>
+          <option>Student</option>
+          <option>Remote worker</option>
+          <option>Healthcare professional</option>
+          <option>Investor / Advisor</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>How did you hear about us?</label>
+        <input type="text" id="wl-source" placeholder="Social media, friend, Columbia, etc.">
+      </div>
+      <div class="submit-row">
+        <span class="form-msg" id="wl-msg"></span>
+        <button class="btn-primary" style="width:100%" onclick="saveWaitlist()">Reserve My Spot →</button>
+      </div>
+    </div>
+
+    <div class="wl-count" id="wl-count" style="margin-top:40px;text-align:center;">
+      <div class="num" id="wl-num">0</div>
+      <p>people on the waitlist</p>
+    </div>
+
+    <div class="wl-entries" id="wl-entries"></div>
+
+    <div style="margin-top:48px; padding:28px; background:rgba(74,127,212,.08); border:1px solid rgba(74,127,212,.2); border-radius:16px;">
+      <div class="section-label" style="margin-bottom:8px">Reach the Founder</div>
+      <p style="color:var(--muted); font-size:.9rem; line-height:1.7;">Have questions about Sapna Sleep, the product, or investment opportunities? Anuraag would love to hear from you.</p>
+      <a href="mailto:hello@sapnasleep.com" style="color:var(--soft-blue); font-weight:600; display:block; margin-top:12px;">hello@sapnasleep.com →</a>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════
+let currentPage = 'home';
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn:not(.nav-cta)').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const navBtn = document.getElementById('nav-' + name);
+  if (navBtn) navBtn.classList.add('active');
+  currentPage = name;
+  window.scrollTo(0, 0);
+  if (name === 'tracker') renderTracker();
+  if (name === 'waitlist') renderWaitlist();
+}
+
+// ════════════════════════════════
+//  DATABASE (sql.js → localStorage fallback)
+// ════════════════════════════════
+let db = null;
+
+async function initDB() {
+  try {
+    const SQL = await initSqlJs({
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
+    });
+    // Try to restore from localStorage
+    const saved = localStorage.getItem('sapna_db');
+    if (saved) {
+      const buf = Uint8Array.from(atob(saved), c => c.charCodeAt(0));
+      db = new SQL.Database(buf);
+    } else {
+      db = new SQL.Database();
+    }
+    db.run(`CREATE TABLE IF NOT EXISTS sleep_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      bedtime TEXT,
+      wake_time TEXT,
+      duration REAL,
+      quality INTEGER,
+      mood TEXT,
+      factors TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )`);
+    db.run(`CREATE TABLE IF NOT EXISTS waitlist (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      user_type TEXT,
+      source TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )`);
+    saveDB();
+    renderTracker();
+    renderWaitlist();
+  } catch(e) {
+    console.warn('sql.js failed, using localStorage fallback', e);
+    db = null;
+  }
+}
+
+function saveDB() {
+  if (!db) return;
+  try {
+    const data = db.export();
+    const b64 = btoa(String.fromCharCode(...data));
+    localStorage.setItem('sapna_db', b64);
+  } catch(e) { console.warn('saveDB error', e); }
+}
+
+// Fallback helpers using localStorage JSON
+function lsGet(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
+function lsSet(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+// ════════════════════════════════
+//  SLEEP TRACKER
+// ════════════════════════════════
+let selectedQuality = 0;
+const qualLabels = ['','Terrible','Poor','Okay','Good','Excellent'];
+
+function setStar(v) {
+  selectedQuality = v;
+  document.querySelectorAll('.star-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.v) <= v);
+  });
+  document.getElementById('qual-label').textContent = qualLabels[v];
+}
+
+function togglePill(el, group) {
+  if (group === 'mood') {
+    document.querySelectorAll('#mood-group .pill').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+  } else {
+    el.classList.toggle('selected');
+  }
+}
+
+// Auto-calc duration when bedtime/wake changes
+function autoDuration() {
+  const bt = document.getElementById('f-bedtime').value;
+  const wk = document.getElementById('f-wake').value;
+  if (!bt || !wk) return;
+  let [bh, bm] = bt.split(':').map(Number);
+  let [wh, wm] = wk.split(':').map(Number);
+  let mins = (wh * 60 + wm) - (bh * 60 + bm);
+  if (mins <= 0) mins += 24 * 60;
+  document.getElementById('f-dur').value = (mins / 60).toFixed(2);
+}
+
+document.getElementById('f-bedtime').addEventListener('change', autoDuration);
+document.getElementById('f-wake').addEventListener('change', autoDuration);
+
+// Set today as default
+(function() {
+  const d = new Date();
+  document.getElementById('f-date').value = d.toISOString().split('T')[0];
+})();
+
+function clearForm() {
+  document.getElementById('f-bedtime').value = '';
+  document.getElementById('f-wake').value = '';
+  document.getElementById('f-dur').value = '';
+  document.getElementById('f-notes').value = '';
+  selectedQuality = 0;
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('qual-label').textContent = 'Tap to rate';
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected'));
+  document.getElementById('form-msg').textContent = '';
+}
+
+function saveSleep() {
+  const date = document.getElementById('f-date').value;
+  const bedtime = document.getElementById('f-bedtime').value;
+  const wake = document.getElementById('f-wake').value;
+  const dur = parseFloat(document.getElementById('f-dur').value);
+  const notes = document.getElementById('f-notes').value.trim();
+  const mood = document.querySelector('#mood-group .pill.selected')?.textContent?.trim() || '';
+  const factors = [...document.querySelectorAll('#factors-group .pill.selected')].map(p => p.textContent.trim()).join(', ');
+
+  if (!date) { showMsg('form-msg', 'Please select a date.', true); return; }
+  if (!dur || isNaN(dur)) { showMsg('form-msg', 'Please enter or calculate duration.', true); return; }
+
+  const entry = { date, bedtime, wake_time: wake, duration: dur, quality: selectedQuality || null, mood, factors, notes };
+
+  if (db) {
+    try {
+      db.run(`INSERT INTO sleep_logs (date, bedtime, wake_time, duration, quality, mood, factors, notes)
+              VALUES (?,?,?,?,?,?,?,?)`,
+        [entry.date, entry.bedtime, entry.wake_time, entry.duration, entry.quality, entry.mood, entry.factors, entry.notes]);
+      saveDB();
+    } catch(e) {
+      // maybe duplicate — try to overwrite
+      try {
+        db.run(`UPDATE sleep_logs SET bedtime=?, wake_time=?, duration=?, quality=?, mood=?, factors=?, notes=? WHERE date=?`,
+          [entry.bedtime, entry.wake_time, entry.duration, entry.quality, entry.mood, entry.factors, entry.notes, entry.date]);
+        saveDB();
+      } catch(e2) { console.warn(e2); }
+    }
+  } else {
+    // localStorage fallback
+    const logs = lsGet('sapna_sleep_logs');
+    const idx = logs.findIndex(l => l.date === date);
+    if (idx >= 0) logs[idx] = {...logs[idx], ...entry};
+    else logs.push({...entry, id: Date.now()});
+    lsSet('sapna_sleep_logs', logs);
+  }
+
+  showToast('✦ Sleep entry saved!');
+  clearForm();
+  renderTracker();
+}
+
+function deleteSleep(id) {
+  if (!confirm('Delete this entry?')) return;
+  if (db) {
+    db.run('DELETE FROM sleep_logs WHERE id = ?', [id]);
+    saveDB();
+  } else {
+    const logs = lsGet('sapna_sleep_logs');
+    lsSet('sapna_sleep_logs', logs.filter(l => l.id != id));
+  }
+  renderTracker();
+  showToast('Entry deleted.');
+}
+
+function getLogs() {
+  if (db) {
+    const res = db.exec('SELECT * FROM sleep_logs ORDER BY date DESC, id DESC');
+    if (!res.length) return [];
+    const cols = res[0].columns;
+    return res[0].values.map(row => Object.fromEntries(cols.map((c,i) => [c, row[i]])));
+  }
+  return lsGet('sapna_sleep_logs').sort((a,b) => b.date.localeCompare(a.date));
+}
+
+function renderTracker() {
+  const logs = getLogs();
+  // Insights
+  const recent = logs.filter(l => {
+    const d = new Date(l.date);
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
+    return d >= cutoff;
+  });
+  const avgDur = recent.length ? (recent.reduce((s,l) => s + (l.duration||0), 0) / recent.length).toFixed(1) : '—';
+  const qualLogs = recent.filter(l => l.quality);
+  const avgQual = qualLogs.length ? (qualLogs.reduce((s,l) => s + l.quality, 0) / qualLogs.length).toFixed(1) : '—';
+  document.getElementById('ins-avg').textContent = avgDur !== '—' ? avgDur + 'h' : '—';
+  document.getElementById('ins-quality').textContent = avgQual !== '—' ? avgQual + '★' : '—';
+  document.getElementById('ins-total').textContent = logs.length;
+  // streak
+  let streak = 0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const sortedDates = [...new Set(logs.map(l=>l.date))].sort((a,b)=>b.localeCompare(a));
+  for (let i = 0; i < sortedDates.length; i++) {
+    const d = new Date(sortedDates[i]); d.setHours(0,0,0,0);
+    const expected = new Date(today); expected.setDate(expected.getDate() - i);
+    if (d.getTime() === expected.getTime()) streak++; else break;
+  }
+  document.getElementById('ins-streak').textContent = streak;
+
+  // Chart
+  const chartCard = document.getElementById('chart-card');
+  if (logs.length > 1) {
+    chartCard.style.display = '';
+    const last14 = [...logs].sort((a,b) => a.date.localeCompare(b.date)).slice(-14);
+    const maxDur = Math.max(...last14.map(l => l.duration || 0), 8);
+    const barsEl = document.getElementById('chart-bars');
+    barsEl.innerHTML = last14.map(l => {
+      const h = Math.max(4, ((l.duration||0) / maxDur) * 100);
+      const dt = l.date.slice(5); // MM-DD
+      return `<div class="bar-wrap">
+        <div class="bar-val">${l.duration ? l.duration + 'h' : ''}</div>
+        <div class="bar" style="height:${h}%" title="${l.date}: ${l.duration}h"></div>
+        <div class="bar-date">${dt}</div>
+      </div>`;
+    }).join('');
+  } else {
+    chartCard.style.display = 'none';
+  }
+
+  // History table
+  const histEl = document.getElementById('history-content');
+  if (!logs.length) {
+    histEl.innerHTML = `<div class="empty-state"><div class="e-icon">🌙</div><p>No sleep entries yet. Log your first night above!</p></div>`;
+    return;
+  }
+  histEl.innerHTML = `<table class="history-table">
+    <thead><tr>
+      <th>Date</th><th>Duration</th><th>Quality</th><th>Mood</th><th>Factors</th><th></th>
+    </tr></thead>
+    <tbody>
+      ${logs.map(l => `<tr>
+        <td>${l.date}</td>
+        <td>${l.duration ? l.duration + 'h' : '—'}</td>
+        <td>${l.quality ? '★'.repeat(l.quality) : '—'}</td>
+        <td>${l.mood || '—'}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.factors || '—'}</td>
+        <td><button class="del-btn" onclick="deleteSleep(${l.id})">✕</button></td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+// ════════════════════════════════
+//  WAITLIST
+// ════════════════════════════════
+function saveWaitlist() {
+  const name = document.getElementById('wl-name').value.trim();
+  const email = document.getElementById('wl-email').value.trim();
+  const type = document.getElementById('wl-type').value;
+  const source = document.getElementById('wl-source').value.trim();
+
+  if (!name) { showMsg('wl-msg', 'Please enter your name.', true); return; }
+  if (!email || !email.includes('@')) { showMsg('wl-msg', 'Please enter a valid email.', true); return; }
+
+  if (db) {
+    try {
+      db.run('INSERT INTO waitlist (name, email, user_type, source) VALUES (?,?,?,?)', [name, email, type, source]);
+      saveDB();
+    } catch(e) {
+      showMsg('wl-msg', 'This email is already on the waitlist!', true); return;
+    }
+  } else {
+    const list = lsGet('sapna_waitlist');
+    if (list.find(w => w.email === email)) { showMsg('wl-msg', 'This email is already on the waitlist!', true); return; }
+    list.push({ id: Date.now(), name, email, user_type: type, source });
+    lsSet('sapna_waitlist', list);
+  }
+
+  document.getElementById('wl-name').value = '';
+  document.getElementById('wl-email').value = '';
+  document.getElementById('wl-type').value = '';
+  document.getElementById('wl-source').value = '';
+  showToast('🌙 You\'re on the waitlist!');
+  renderWaitlist();
+}
+
+function getWaitlist() {
+  if (db) {
+    const res = db.exec('SELECT * FROM waitlist ORDER BY id DESC');
+    if (!res.length) return [];
+    const cols = res[0].columns;
+    return res[0].values.map(row => Object.fromEntries(cols.map((c,i) => [c, row[i]])));
+  }
+  return lsGet('sapna_waitlist').reverse();
+}
+
+function renderWaitlist() {
+  const list = getWaitlist();
+  document.getElementById('wl-num').textContent = list.length;
+  const el = document.getElementById('wl-entries');
+  if (!list.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div style="font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:12px;">Recent Sign-ups</div>` +
+    list.slice(0, 10).map(w => `
+      <div class="wl-entry">
+        <div>
+          <div class="wl-name">${escHtml(w.name)}</div>
+          <div class="wl-meta">${w.user_type || 'Early adopter'}</div>
+        </div>
+        <div class="wl-badge">Waitlist</div>
+      </div>`).join('');
+}
+
+// ════════════════════════════════
+//  UTILS
+// ════════════════════════════════
+function showMsg(id, msg, isErr) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'form-msg' + (isErr ? ' err' : '');
+  setTimeout(() => el.textContent = '', 4000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════
+//  REVEAL ANIMATIONS
+// ════════════════════════════════
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ════════════════════════════════
+//  INIT
+// ════════════════════════════════
+initDB();
+</script>
+</body>
+</html>
