@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sapna Sleep</title>
+<title>Sapna Sleep — AI-Driven Sleep Optimization for Night Workers</title>
+<meta name="description" content="Sapna Sleep uses AI to actively improve sleep quality for night-shift workers, gig drivers, and busy people — not just track it. Join the beta waitlist.">
+<meta name="keywords" content="sleep optimization, AI sleep, night shift workers, sleep tracker, sleep health, wearable sleep">
+<meta property="og:title" content="Sapna Sleep — AI-Driven Sleep Optimization">
+<meta property="og:description" content="Helping night workers & busy people sleep better and live brighter. Real-time AI interventions, not just tracking.">
+<meta property="og:url" content="https://sapnasleep.com">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sapna Sleep — AI-Driven Sleep Optimization">
+<meta name="twitter:description" content="Helping night workers & busy people sleep better and live brighter."
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <style>
@@ -530,9 +539,9 @@ footer a { color: var(--soft-blue); text-decoration: none; }
           <p>More than 1 in 3 adults worldwide suffer from poor sleep quality.</p>
         </div>
         <div class="p-card reveal">
-          <div class="num">$B+</div>
+          <div class="num">$411B</div>
           <h3>Economic Cost</h3>
-          <p>Poor sleep costs the global economy billions annually in lost productivity.</p>
+          <p>Poor sleep costs the US economy alone $411B annually in lost productivity.</p>
         </div>
         <div class="p-card reveal">
           <div class="num">0</div>
@@ -622,6 +631,7 @@ footer a { color: var(--soft-blue); text-decoration: none; }
           <ul>
             <li>Waitlist sign-up &amp; onboard first 25–50 beta testers</li>
             <li>Continue customer interviews with shift workers &amp; students</li>
+            <li>Student competition circuit — TigerLaunch &amp; accelerator applications</li>
           </ul>
         </div>
         <div class="rm-item reveal">
@@ -796,7 +806,10 @@ footer a { color: var(--soft-blue); text-decoration: none; }
 
     <!-- HISTORY -->
     <div class="history-card">
-      <h2>📋 Sleep History</h2>
+      <h2 style="display:flex;align-items:center;justify-content:space-between;padding-right:20px;">
+        <span>📋 Sleep History</span>
+        <button class="btn-secondary" onclick="exportCSV()" style="font-size:.8rem;padding:8px 16px;">⬇ Export CSV</button>
+      </h2>
       <div id="history-content"></div>
     </div>
   </div>
@@ -1134,7 +1147,7 @@ function renderTracker() {
 // ════════════════════════════════
 //  WAITLIST
 // ════════════════════════════════
-function saveWaitlist() {
+async function saveWaitlist() {
   const name = document.getElementById('wl-name').value.trim();
   const email = document.getElementById('wl-email').value.trim();
   const type = document.getElementById('wl-type').value;
@@ -1143,18 +1156,35 @@ function saveWaitlist() {
   if (!name) { showMsg('wl-msg', 'Please enter your name.', true); return; }
   if (!email || !email.includes('@')) { showMsg('wl-msg', 'Please enter a valid email.', true); return; }
 
+  // Save locally first
+  let alreadyExists = false;
   if (db) {
     try {
       db.run('INSERT INTO waitlist (name, email, user_type, source) VALUES (?,?,?,?)', [name, email, type, source]);
       saveDB();
     } catch(e) {
-      showMsg('wl-msg', 'This email is already on the waitlist!', true); return;
+      alreadyExists = true;
     }
   } else {
     const list = lsGet('sapna_waitlist');
-    if (list.find(w => w.email === email)) { showMsg('wl-msg', 'This email is already on the waitlist!', true); return; }
-    list.push({ id: Date.now(), name, email, user_type: type, source });
-    lsSet('sapna_waitlist', list);
+    if (list.find(w => w.email === email)) { alreadyExists = true; }
+    else { list.push({ id: Date.now(), name, email, user_type: type, source }); lsSet('sapna_waitlist', list); }
+  }
+
+  if (alreadyExists) { showMsg('wl-msg', 'This email is already on the waitlist!', true); return; }
+
+  // Send to hello@sapnasleep.com via Formspree
+  try {
+    showMsg('wl-msg', 'Submitting…', false);
+    const res = await fetch('https://formspree.io/f/mykrqla', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ name, email, user_type: type, source, _subject: `New Sapna Sleep waitlist signup: ${name}` })
+    });
+    if (!res.ok) throw new Error('Formspree error');
+  } catch(e) {
+    // Formspree failed but local save succeeded — don't block the user
+    console.warn('Formspree submission failed:', e);
   }
 
   document.getElementById('wl-name').value = '';
@@ -1162,6 +1192,7 @@ function saveWaitlist() {
   document.getElementById('wl-type').value = '';
   document.getElementById('wl-source').value = '';
   showToast('🌙 You\'re on the waitlist!');
+  showMsg('wl-msg', '', false);
   renderWaitlist();
 }
 
@@ -1219,6 +1250,34 @@ const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObserver.unobserve(e.target); } });
 }, { threshold: 0.12 });
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// ════════════════════════════════
+//  EXPORT CSV
+// ════════════════════════════════
+function exportCSV() {
+  const logs = getLogs();
+  if (!logs.length) { showToast('No entries to export yet.'); return; }
+  const headers = ['Date','Bedtime','Wake Time','Duration (hrs)','Quality (1-5)','Mood','Factors','Notes'];
+  const rows = logs.map(l => [
+    l.date || '',
+    l.bedtime || '',
+    l.wake_time || '',
+    l.duration || '',
+    l.quality || '',
+    l.mood || '',
+    l.factors || '',
+    (l.notes || '').replace(/"/g, '""')
+  ].map(v => `"${v}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sapna-sleep-log-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✦ Sleep log exported!');
+}
 
 // ════════════════════════════════
 //  INIT
