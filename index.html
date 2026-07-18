@@ -1176,7 +1176,7 @@ async function saveWaitlist() {
   // Send to hello@sapnasleep.com via Formspree
   try {
     showMsg('wl-msg', 'Submitting…', false);
-    const res = await fetch('https://formspree.io/f/mykrqla', {
+    const res = await fetch('https://formspree.io/f/mykreqla', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({ name, email, user_type: type, source, _subject: `New Sapna Sleep waitlist signup: ${name}` })
